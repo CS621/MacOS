@@ -1,0 +1,53 @@
+name: macOS Remote Access Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  macos-build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Configure VNC / Remote Desktop Permissions
+      run: |
+        sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+          -activate -configure -access -on \
+          -client_configure -privs -all \
+          -allowAccessFor -allUsers
+        
+        # User account ka password reset for VNC access
+        sudo dscl . -passwd /Users/runner P@ssword1234!
+        echo "VNC / Remote Desktop successfully configured for runner user!"
+
+    - name: Install and Setup Tailscale
+      env:
+        TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
+      run: |
+        curl -fsSL https://tailscale.com/install.sh | sh
+        sudo tailscaled --state=mem: &
+        sleep 5
+        sudo tailscale up --authkey=$TAILSCALE_AUTHKEY --hostname=github-mac-runner
+
+    - name: Display Connection Details
+      run: |
+        MAC_IP=$(tailscale ip -4)
+        echo "=================================================="
+        echo "  macOS Connection Info"
+        echo "=================================================="
+        echo " Tailscale IP : $MAC_IP"
+        echo " VNC Address  : vnc://$MAC_IP:5900"
+        echo " SSH Address  : ssh runner@$MAC_IP"
+        echo " Username     : runner"
+        echo " Password     : P@ssword1234!"
+        echo "=================================================="
+
+    - name: Keep Alive (Limits Bypass Loop)
+      run: |
+        echo "Starting keep-alive engine..."
+        while true; do
+          echo "Runner active at $(date)"
+          sleep 300
+        done
