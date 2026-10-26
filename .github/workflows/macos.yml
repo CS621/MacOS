@@ -11,16 +11,18 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Configure VNC / Remote Desktop Permissions
+    - name: Configure VNC and Remote Management
       run: |
+        # Set runner password safely
+        echo "P@ssword1234!" | sudo dscl . -passwd /Users/runner
+        
+        # Enable Native Remote Desktop / VNC
         sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
           -activate -configure -access -on \
-          -client_configure -privs -all \
-          -allowAccessFor -allUsers
+          -privs -all -allowAccessFor -allUsers
         
-        # User account ka password reset for VNC access
-        sudo dscl . -passwd /Users/runner P@ssword1234!
-        echo "VNC / Remote Desktop successfully configured for runner user!"
+        # Enable SSH Screen/Terminal Access
+        sudo systemsetup -setremotelogin on
 
     - name: Install and Setup Tailscale
       env:
