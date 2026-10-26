@@ -24,18 +24,18 @@ jobs:
         # SSH Access enable karna
         sudo systemsetup -setremotelogin on
 
-    - name: Install and Setup Tailscale
+    - name: Install and Setup Tailscale via Homebrew
       env:
         TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
       run: |
-        curl -fsSL https://tailscale.com/install.sh | sh
-        sudo tailscaled --state=mem: &
+        brew install tailscale
+        sudo /opt/homebrew/opt/tailscale/bin/tailscaled --state=mem: &
         sleep 5
-        sudo tailscale up --authkey=$TAILSCALE_AUTHKEY --hostname=github-mac-runner
+        sudo /opt/homebrew/bin/tailscale up --authkey=$TAILSCALE_AUTHKEY --hostname=github-mac-runner
 
     - name: Display Connection Details
       run: |
-        MAC_IP=$(tailscale ip -4)
+        MAC_IP=$(/opt/homebrew/bin/tailscale ip -4)
         echo "=================================================="
         echo "  macOS Connection Info"
         echo "=================================================="
