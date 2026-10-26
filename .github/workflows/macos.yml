@@ -13,15 +13,15 @@ jobs:
 
     - name: Configure VNC and Remote Management
       run: |
-        # Set runner password safely
-        echo "P@ssword1234!" | sudo dscl . -passwd /Users/runner
+        # sysadminctl se safely password set karna
+        sudo sysadminctl -resetPasswordFor runner -newPassword "P@ssword1234!"
         
-        # Enable Native Remote Desktop / VNC
+        # Native Remote Desktop / VNC enable karna
         sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
           -activate -configure -access -on \
           -privs -all -allowAccessFor -allUsers
         
-        # Enable SSH Screen/Terminal Access
+        # SSH Access enable karna
         sudo systemsetup -setremotelogin on
 
     - name: Install and Setup Tailscale
