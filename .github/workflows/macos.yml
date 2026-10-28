@@ -1,4 +1,25 @@
-- name: Run macOS Docker Container (Fast Boot)
+name: macOS Docker-OSX via Tailscale
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable KVM & Setup Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils freerdp2-x11
+          sudo chmod 666 /dev/kvm
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          tags: tag:ci
+
+      - name: Run macOS Docker Container
         run: |
           docker run -d \
             --name macos \
@@ -8,5 +29,14 @@
             -e RAM=4G \
             -e SMP=2 \
             -e CORES=2 \
-            -e EXTRA='-display none -vnc :0,password=on' \
             sickcodes/docker-osx:high-sierra
+
+      - name: Show Tailscale IP
+        run: |
+          echo "=========================================="
+          echo "Connect via xfreerdp to Tailscale IP:"
+          tailscale ip -4
+          echo "=========================================="
+
+      - name: Keep Alive (6 Hours Max)
+        run: sleep 21600
