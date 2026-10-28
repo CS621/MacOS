@@ -2,6 +2,9 @@ name: macOS Docker-OSX via Tailscale
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -29,7 +32,7 @@ jobs:
             -e RAM=4G \
             -e SMP=2 \
             -e CORES=2 \
-            sickcodes/docker-osx:high-sierra
+            sickcodes/docker-osx:latest
 
       - name: Show Tailscale IP
         run: |
