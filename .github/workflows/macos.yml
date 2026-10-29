@@ -32,6 +32,7 @@ jobs:
             -e RAM=3G \
             -e SMP=2 \
             -e CORES=2 \
+            -e EXTRA='-net nic,model=e1000 -net user,hostfwd=tcp::3389-:3389,hostfwd=tcp::5900-:5900' \
             sickcodes/docker-osx:latest
 
       - name: Wait for Full Boot (10 mins)
