@@ -10,7 +10,7 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget
           sudo chmod 666 /dev/kvm
 
       - name: Install Ngrok
@@ -25,27 +25,16 @@ jobs:
           cd OSX-KVM
           chmod +x *.sh *.py
 
-      - name: Fetch macOS Recovery Image Directly
+      - name: Download BaseSystem Directly
         run: |
           cd OSX-KVM
-          # Using python to download BaseSystem directly via Apple catalog without interactive index crash
-          python3 -c '
-          import urllib.request, json
-          url = "https://raw.githubusercontent.com/kholia/OSX-KVM/master/fetch-macOS-v2.py"
-          print("Fetching BaseSystem...")
-          '
-          python3 fetch-macOS-v2.py --action download --os Ventura || python3 fetch-macOS-v2.py -s 4
+          # Directly downloading a verified BaseSystem recovery image to avoid python catalog index errors
+          wget -O BaseSystem.dmg https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg || curl -L -o BaseSystem.dmg https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg
 
       - name: Convert DMG to IMG
         run: |
           cd OSX-KVM
-          if [ -f "BaseSystem.dmg" ]; then
-            qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
-          else
-            echo "BaseSystem.dmg not found, checking alternative names..."
-            mv *.dmg BaseSystem.dmg || true
-            qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
-          fi
+          qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
           qemu-img create -f qcow2 mac_hdd_ng.img 64G
 
       - name: Configure Ngrok Authtoken
