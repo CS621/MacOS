@@ -32,25 +32,19 @@ jobs:
             -e RAM=3G \
             -e SMP=2 \
             -e CORES=2 \
-            -e EXTRA='-net nic,model=e1000 -net user,hostfwd=tcp::3389-:3389,hostfwd=tcp::5900-:5900' \
-            sickcodes/docker-osx:latest
+            sickcodes/docker-osx:big-sur
 
-      - name: Wait for Full Boot (10 mins)
+      - name: Monitor Boot Status
         run: |
-          echo "Waiting for macOS image to fully boot up..."
-          for i in {1..40}; do
-            if docker logs macos 2>&1 | grep -q "OpenCore"; then
-              echo "OpenCore bootloader detected!"
-              break
-            fi
-            sleep 15
-          done
-          echo "Boot sequence wait completed."
+          echo "Waiting for Big Sur to initialize..."
+          sleep 40
+          docker ps
+          docker logs macos --tail 30
 
       - name: Show Tailscale IP
         run: |
           echo "=========================================="
-          echo "Connect via xfreerdp to Tailscale IP:"
+          echo "Connect via VNC or RDP to Tailscale IP:"
           tailscale ip -4
           echo "=========================================="
 
