@@ -32,12 +32,11 @@ jobs:
             -e RAM=4G \
             -e SMP=2 \
             -e CORES=2 \
-            -e EXTRA='-display none -vnc :0' \
             sickcodes/docker-osx:latest
 
       - name: Wait for Sequoia Download & Boot
         run: |
-          echo "Waiting for macOS image to download and boot (approx 5-10 mins)..."
+          echo "Waiting for macOS image to download and boot..."
           for i in {1..30}; do
             if docker logs macos 2>&1 | grep -q "Booting from"; then
               echo "macOS is booting up!"
