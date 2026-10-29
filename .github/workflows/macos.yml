@@ -23,16 +23,15 @@ jobs:
           tags: tag:ci
           args: --advertise-exit-node
 
-      - name: Run macOS Docker Container (Host Net)
+      - name: Run macOS Docker Container
         run: |
           docker run -d \
             --name macos \
-            --net=host \
             --device /dev/kvm \
+            -p 8006:8006 \
             -e RAM=3G \
             -e SMP=2 \
             -e CORES=2 \
-            -e EXTRA='-vnc 0.0.0.0:0' \
             sickcodes/docker-osx:latest
 
       - name: Wait for Boot & Check Ports
