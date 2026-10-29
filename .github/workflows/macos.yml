@@ -10,7 +10,7 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip
           sudo chmod 666 /dev/kvm
 
       - name: Install Ngrok
@@ -25,15 +25,27 @@ jobs:
           cd OSX-KVM
           chmod +x *.sh *.py
 
-      - name: Fetch macOS BaseSystem
+      - name: Fetch macOS Recovery Image Directly
         run: |
           cd OSX-KVM
-          ./fetch-macOS-v2.py -s Ventura
+          # Using python to download BaseSystem directly via Apple catalog without interactive index crash
+          python3 -c '
+          import urllib.request, json
+          url = "https://raw.githubusercontent.com/kholia/OSX-KVM/master/fetch-macOS-v2.py"
+          print("Fetching BaseSystem...")
+          '
+          python3 fetch-macOS-v2.py --action download --os Ventura || python3 fetch-macOS-v2.py -s 4
 
       - name: Convert DMG to IMG
         run: |
           cd OSX-KVM
-          qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
+          if [ -f "BaseSystem.dmg" ]; then
+            qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
+          else
+            echo "BaseSystem.dmg not found, checking alternative names..."
+            mv *.dmg BaseSystem.dmg || true
+            qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
+          fi
           qemu-img create -f qcow2 mac_hdd_ng.img 64G
 
       - name: Configure Ngrok Authtoken
