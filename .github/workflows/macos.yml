@@ -16,35 +16,35 @@ jobs:
           sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils freerdp2-x11
           sudo chmod 666 /dev/kvm
 
-      - name: Connect to Tailscale
+      - name: Connect to Tailscale (Host Network)
         uses: tailscale/github-action@v2
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
           tags: tag:ci
+          args: --advertise-exit-node
 
-      - name: Run macOS Docker Container
+      - name: Run macOS Docker Container (Host Net)
         run: |
           docker run -d \
             --name macos \
+            --net=host \
             --device /dev/kvm \
-            -p 5900:5900 \
-            -p 3389:3389 \
             -e RAM=3G \
             -e SMP=2 \
             -e CORES=2 \
             sickcodes/docker-osx:latest
 
-      - name: Monitor Boot Status
+      - name: Wait for Boot & Check Ports
         run: |
-          echo "Waiting for Big Sur to initialize..."
-          sleep 40
-          docker ps
+          echo "Waiting for QEMU and VNC/RDP to spin up..."
+          sleep 90
+          netstat -tuln | grep -E "5900|3389" || echo "Ports not bound yet"
           docker logs macos --tail 30
 
       - name: Show Tailscale IP
         run: |
           echo "=========================================="
-          echo "Connect via VNC or RDP to Tailscale IP:"
+          echo "Connect via VNC to Tailscale IP:"
           tailscale ip -4
           echo "=========================================="
 
