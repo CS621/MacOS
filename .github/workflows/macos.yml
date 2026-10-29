@@ -1,4 +1,4 @@
-name: macOS Docker-OSX via Tailscale
+name: macOS via Cloudflare Tunnel
 
 on:
   workflow_dispatch:
@@ -13,40 +13,33 @@ jobs:
       - name: Enable KVM & Setup Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils freerdp2-x11
+          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils curl
           sudo chmod 666 /dev/kvm
-
-      - name: Connect to Tailscale (Host Network)
-        uses: tailscale/github-action@v2
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          tags: tag:ci
-          args: --advertise-exit-node
 
       - name: Run macOS Docker Container
         run: |
           docker run -d \
             --name macos \
             --device /dev/kvm \
-            -p 8006:8006 \
+            -p 5900:5900 \
             -e RAM=3G \
             -e SMP=2 \
             -e CORES=2 \
+            -e EXTRA='-vnc 0.0.0.0:0' \
             sickcodes/docker-osx:latest
 
-      - name: Wait for Boot & Check Ports
+      - name: Install Cloudflare Tunnel (cloudflared)
         run: |
-          echo "Waiting for QEMU and VNC/RDP to spin up..."
-          sleep 90
-          netstat -tuln | grep -E "5900|3389" || echo "Ports not bound yet"
-          docker logs macos --tail 30
+          curl -L --output cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x cloudflared
+          sudo mv cloudflared /usr/local/bin/
 
-      - name: Show Tailscale IP
+      - name: Expose VNC via Cloudflare TCP Tunnel
         run: |
-          echo "=========================================="
-          echo "Connect via VNC to Tailscale IP:"
-          tailscale ip -4
-          echo "=========================================="
+          echo "Waiting for QEMU VNC to initialize..."
+          sleep 60
+          cloudflared tunnel --url tcp://localhost:5900 &
+          sleep 15
 
       - name: Keep Alive (6 Hours Max)
         run: sleep 21600
