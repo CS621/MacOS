@@ -1,4 +1,4 @@
-name: macOS via OSX-KVM & Cloudflare
+name: macOS via OSX-KVM & TigerVNC
 
 on:
   workflow_dispatch:
@@ -10,14 +10,8 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip openssh-client
           sudo chmod 666 /dev/kvm
-
-      - name: Install Cloudflare Tunnel (cloudflared)
-        run: |
-          curl -L --output cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-          chmod +x cloudflared
-          sudo mv cloudflared /usr/local/bin/
 
       - name: Clone OSX-KVM Repo
         run: |
@@ -39,7 +33,7 @@ jobs:
           qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
           qemu-img create -f qcow2 mac_hdd_ng.img 64G
 
-      - name: Launch QEMU macOS & Start Cloudflare TCP Tunnel
+      - name: Launch QEMU macOS & Start Direct TCP Tunnel
         run: |
           cd OSX-KVM
           qemu-system-x86_64 \
@@ -59,16 +53,15 @@ jobs:
             -vnc 0.0.0.0:0 &
 
           sleep 15
-          echo "Starting Cloudflare TCP tunnel on port 5900..."
-          cloudflared tunnel --url tcp://localhost:5900 --no-autoupdate > cfd.log 2>&1 &
-          sleep 5
+          echo "Starting Direct TCP tunnel for TigerVNC..."
+          ssh -o StrictHostKeyChecking=no -R 0:localhost:5900 localhost.run > vnc_tunnel.log 2>&1 &
+          sleep 10
 
-      - name: Get Cloudflare VNC Address
+      - name: Get TigerVNC Connection Address
         run: |
-          cd OSX-KVM
           sleep 5
-          echo "=== CLOUDFLARE TUNNEL URL ==="
-          grep -oE 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' cfd.log || cat cfd.log
+          echo "=== TIGERVNC ADDRESS ==="
+          cat vnc_tunnel.log | grep -oE '[a-zA-Z0-9.-]+\.localhost\.run:[0-9]+' || cat vnc_tunnel.log
 
       - name: Keep Alive (6 Hours Max)
         run: sleep 21600
