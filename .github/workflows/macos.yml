@@ -32,23 +32,15 @@ jobs:
             -e RAM=4G \
             -e SMP=2 \
             -e CORES=2 \
-            sickcodes/docker-osx:latest
+            -e NOPAE=1 \
+            sickcodes/docker-osx:auto
 
-      - name: Wait for Sequoia Download & Boot
+      - name: Monitor Container Logs & Health
         run: |
-          echo "Waiting for macOS image to download and boot..."
-          for i in {1..30}; do
-            if docker logs macos 2>&1 | grep -q "Booting from"; then
-              echo "macOS is booting up!"
-              break
-            fi
-            sleep 15
-          done
-          docker logs macos --tail 30
-
-      - name: Check QEMU Process Status
-        run: |
-          docker exec macos ps aux || echo "Container process check failed"
+          echo "Checking container status..."
+          sleep 20
+          docker ps
+          docker logs macos --tail 50
 
       - name: Show Tailscale IP
         run: |
