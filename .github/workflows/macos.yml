@@ -29,17 +29,22 @@ jobs:
             --device /dev/kvm \
             -p 5900:5900 \
             -p 3389:3389 \
-            -e RAM=4G \
+            -e RAM=3G \
             -e SMP=2 \
             -e CORES=2 \
             sickcodes/docker-osx:latest
 
-      - name: Monitor Container Logs & Health
+      - name: Wait for Full Boot (10 mins)
         run: |
-          echo "Waiting for container initialization..."
-          sleep 30
-          docker ps
-          docker logs macos --tail 40
+          echo "Waiting for macOS image to fully boot up..."
+          for i in {1..40}; do
+            if docker logs macos 2>&1 | grep -q "OpenCore"; then
+              echo "OpenCore bootloader detected!"
+              break
+            fi
+            sleep 15
+          done
+          echo "Boot sequence wait completed."
 
       - name: Show Tailscale IP
         run: |
