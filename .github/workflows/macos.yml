@@ -32,6 +32,7 @@ jobs:
             -e RAM=3G \
             -e SMP=2 \
             -e CORES=2 \
+            -e EXTRA='-vnc 0.0.0.0:0' \
             sickcodes/docker-osx:latest
 
       - name: Wait for Boot & Check Ports
