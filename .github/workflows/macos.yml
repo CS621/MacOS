@@ -10,8 +10,14 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils ngrok
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget
           sudo chmod 666 /dev/kvm
+
+      - name: Install Ngrok
+        run: |
+          curl -sSOL https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+          tar -xzf ngrok-v3-stable-linux-amd64.tgz
+          sudo mv ngrok /usr/local/bin/
 
       - name: Clone OSX-KVM Repo
         run: |
