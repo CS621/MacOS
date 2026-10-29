@@ -32,15 +32,14 @@ jobs:
             -e RAM=4G \
             -e SMP=2 \
             -e CORES=2 \
-            -e NOPAE=1 \
-            sickcodes/docker-osx:auto
+            sickcodes/docker-osx:latest
 
       - name: Monitor Container Logs & Health
         run: |
-          echo "Checking container status..."
-          sleep 20
+          echo "Waiting for container initialization..."
+          sleep 30
           docker ps
-          docker logs macos --tail 50
+          docker logs macos --tail 40
 
       - name: Show Tailscale IP
         run: |
