@@ -32,7 +32,14 @@ jobs:
             -e RAM=4G \
             -e SMP=2 \
             -e CORES=2 \
+            -e EXTRA='-display none -vnc :0' \
             sickcodes/docker-osx:latest
+
+      - name: Wait for Boot & Check Logs
+        run: |
+          echo "Waiting for container to initialize..."
+          sleep 30
+          docker logs macos
 
       - name: Show Tailscale IP
         run: |
