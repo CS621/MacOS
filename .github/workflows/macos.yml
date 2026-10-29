@@ -10,7 +10,7 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip
           sudo chmod 666 /dev/kvm
 
       - name: Install Ngrok
@@ -23,11 +23,17 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
 
-      - name: Download Valid macOS Recovery BaseSystem
+      - name: Download Valid BaseSystem via Automated Python Script
         run: |
           cd OSX-KVM
-          # Bypassing python interactive script completely and fetching a direct valid BaseSystem recovery DMG
-          wget -O BaseSystem.dmg "https://recovery.selis.club/BaseSystem.dmg" || curl -L -o BaseSystem.dmg "https://github.com/kholia/OSX-KVM/raw/master/BaseSystem.dmg"
+          # Automatically feeding option '3' (Monterey) or '4' (Ventura) to the python script to bypass interactive EOF error
+          echo "4" | python3 fetch-macOS-v2.py || python3 fetch-macOS-v2.py --action download --os Ventura || true
+          
+          # Verify file size, if invalid or missing, fetch from a guaranteed reliable mirror
+          if [ ! -f "BaseSystem.dmg" ] || [ $(stat -c%s "BaseSystem.dmg") -lt 50000000 ]; then
+            echo "Downloading from reliable mirror..."
+            curl -L -o BaseSystem.dmg "https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg"
+          fi
 
       - name: Convert DMG to IMG
         run: |
