@@ -10,7 +10,7 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip
           sudo chmod 666 /dev/kvm
 
       - name: Install Ngrok
@@ -25,11 +25,15 @@ jobs:
           cd OSX-KVM
           chmod +x *.sh *.py
 
-      - name: Download BaseSystem Directly
+      - name: Download BaseSystem Recovery Image Safely
         run: |
           cd OSX-KVM
-          # Directly downloading a verified BaseSystem recovery image to avoid python catalog index errors
-          wget -O BaseSystem.dmg https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg || curl -L -o BaseSystem.dmg https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg
+          # Try running python fetch script, if it fails, download directly from the master repository mirror
+          python3 fetch-macOS-v2.py || true
+          if [ ! -f "BaseSystem.dmg" ] || [ $(stat -c%s "BaseSystem.dmg") -lt 50000000 ]; then
+            echo "Using robust direct mirror for BaseSystem.dmg..."
+            curl -L -o BaseSystem.dmg "https://raw.githubusercontent.com/kholia/OSX-KVM/master/BaseSystem.dmg" || wget -O BaseSystem.dmg "https://raw.githubusercontent.com/kholia/OSX-KVM/master/BaseSystem.dmg"
+          fi
 
       - name: Convert DMG to IMG
         run: |
