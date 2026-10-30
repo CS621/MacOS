@@ -20,19 +20,34 @@ jobs:
           chmod +x bore
           sudo mv bore /usr/local/bin/
 
-      - name: Clone OSX-KVM Repo & Download Valid Firmware
+      - name: Enable KVM & Install QEMU & Firmware
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip qemu-efi-x86
+          sudo chmod 666 /dev/kvm
+
+      - name: Install Bore CLI
+        run: |
+          wget https://github.com/ekzhang/bore/releases/download/v0.4.1/bore-v0.4.1-x86_64-unknown-linux-musl.tar.gz -O bore.tar.gz
+          tar -xzf bore.tar.gz
+          chmod +x bore
+          sudo mv bore /usr/local/bin/
+
+      - name: Clone OSX-KVM Repo & Setup Valid Firmware
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
           cd OSX-KVM
           
-          # Remove any leftover dummy files
+          # Remove any broken files
           rm -f OVMF_CODE.fd OVMF_VARS-1024x768.fd
           
-          # Directly download correct raw firmware files with proper firmware/ path
-          curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_CODE.fd"
-          curl -L -o OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_VARS-1024x768.fd"
+          # Copy guaranteed valid OVMF firmware from official Ubuntu package
+          cp /usr/share/qemu-efi-x86/OVMF_CODE.fd ./OVMF_CODE.fd
           
-          # Verify file size (OVMF_CODE.fd must be ~2MB)
+          # Create exact 2MB blank NVRAM vars file
+          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1M count=2
+          
+          # Check file sizes to be 100% sure
           ls -lh OVMF_CODE.fd OVMF_VARS-1024x768.fd
 
       - name: Download Valid BaseSystem via Automated Python Script
