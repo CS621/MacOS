@@ -82,10 +82,9 @@ jobs:
             -device ich9-intel-hda -device hda-duplex \
             -drive id=BaseSystem,if=ide,index=1,media=cdrom,file=BaseSystem.img \
             -drive id=SystemDisk,if=ide,index=2,file=mac_hdd_ng.img,format=qcow2 \
-            -vga std \
-            -global VGA.vgamem_mb=64 \
+            -vga qxl \
             -serial file:qemu_serial.log \
-            -vnc 0.0.0.0:0 > qemu_output.log 2>&1 &
+            -vnc 0.0.0.0:0 &
 
           sleep 15
           echo "=== QEMU SERIAL LOGS ==="
