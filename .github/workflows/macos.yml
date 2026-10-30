@@ -33,7 +33,7 @@ jobs:
           qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
           qemu-img create -f qcow2 mac_hdd_ng.img 64G
 
-     - name: Launch QEMU macOS & Start Direct TCP Tunnel
+      - name: Launch QEMU macOS & Start Direct TCP Tunnel
         run: |
           cd OSX-KVM
           # Fetching OVMF firmware files safely from reliable paths in the repo
@@ -67,6 +67,7 @@ jobs:
 
       - name: Get TigerVNC Connection Address
         run: |
+          cd OSX-KVM
           sleep 5
           echo "=== TIGERVNC ADDRESS ==="
           cat vnc_tunnel.log | grep -oE '[a-zA-Z0-9.-]+\.localhost\.run:[0-9]+' || cat vnc_tunnel.log
