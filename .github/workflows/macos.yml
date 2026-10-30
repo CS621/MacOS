@@ -10,7 +10,7 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip git-lfs expect
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip git-lfs
           sudo chmod 666 /dev/kvm
 
       - name: Install Bore CLI
@@ -84,14 +84,9 @@ jobs:
             -drive id=SystemDisk,if=ide,index=2,file=mac_hdd_ng.img,format=qcow2 \
             -vga std \
             -global VGA.vgamem_mb=64 \
-            -display sdl,gl=off \
-            -monitor stdio \
-            -vnc 0.0.0.0:0 > qemu_output.log 2>&1 &
+            -display vnc=0.0.0.0:0 &
 
-          sleep 20
-          echo "Sending Enter key to OpenCore boot menu..."
-          echo "sendkey ret" | nc -U qemu-monitor-sock 2>/dev/null || true
-          
+          sleep 15
           echo "Starting Bore TCP Tunnel..."
           bore local 5900 --to bore.pub > vnc_tunnel.log 2>&1 &
           sleep 5
