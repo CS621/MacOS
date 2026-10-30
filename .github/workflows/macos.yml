@@ -15,26 +15,27 @@ jobs:
 
       - name: Install Bore CLI
         run: |
-          curl -L -o bore https://github.com/ekzhang/bore/releases/download/v0.5.2/bore-v0.5.2-x86_64-unknown-linux-musl.tar.gz
-          # Or install via cargo / direct binary download fallback
-          wget https://github.com/ekzhang/bore/releases/download/v0.4.1/bore-v0.4.1-x86_64-unknown-linux-musl.tar.gz -O bore.tar.gz || true
-          tar -xzf bore.tar.gz || true
-          chmod +x bore || true
-          sudo mv bore /usr/local/bin/ || true
+          wget https://github.com/ekzhang/bore/releases/download/v0.4.1/bore-v0.4.1-x86_64-unknown-linux-musl.tar.gz -O bore.tar.gz
+          tar -xzf bore.tar.gz
+          chmod +x bore
+          sudo mv bore /usr/local/bin/
 
       - name: Clone OSX-KVM Repo
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
 
-      - name: Download Valid BaseSystem via Automated Python Script
+      - name: Download Valid BaseSystem & Firmware
         run: |
           cd OSX-KVM
           echo "4" | python3 fetch-macOS-v2.py || python3 fetch-macOS-v2.py --action download --os Ventura || true
           
           if [ ! -f "BaseSystem.dmg" ] || [ $(stat -c%s "BaseSystem.dmg") -lt 50000000 ]; then
-            echo "Downloading from reliable mirror..."
             curl -L -o BaseSystem.dmg "https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg"
           fi
+
+          # Explicitly download OVMF firmware files to current folder
+          curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd" || wget -O OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd"
+          curl -L -o OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_VARS-1024x768.fd" || wget -O OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_VARS-1024x768.fd"
 
       - name: Convert DMG to IMG
         run: |
@@ -45,15 +46,6 @@ jobs:
       - name: Launch QEMU macOS & Start Bore TCP Tunnel
         run: |
           cd OSX-KVM
-          
-          # Use proper firmware files from local directory or correct subpaths
-          if [ ! -f "OVMF_CODE.fd" ]; then
-            cp pc-bios/OVMF_CODE.fd . || true
-          fi
-          if [ ! -f "OVMF_VARS-1024x768.fd" ]; then
-            cp pc-bios/OVMF_VARS-1024x768.fd . || true
-          fi
-
           qemu-system-x86_64 \
             -enable-kvm \
             -m 3072 \
@@ -80,6 +72,7 @@ jobs:
           cd OSX-KVM
           sleep 5
           echo "=== TIGERVNC ADDRESS ==="
+          echo "bore.pub:24697"
           cat vnc_tunnel.log
 
       - name: Keep Alive (6 Hours Max)
