@@ -33,10 +33,9 @@ jobs:
           qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
           qemu-img create -f qcow2 mac_hdd_ng.img 64G
 
-      - name: Launch QEMU macOS & Start Direct TCP Tunnel
+      - name: Launch QEMU macOS & Start Serveo TCP Tunnel
         run: |
           cd OSX-KVM
-          # Fetching OVMF firmware files safely from reliable paths in the repo
           if [ ! -f "OVMF_CODE.fd" ]; then
             curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_CODE.fd" || wget -O OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_CODE.fd"
           fi
@@ -61,8 +60,8 @@ jobs:
             -vnc 0.0.0.0:0 &
 
           sleep 15
-          echo "Starting Direct TCP tunnel for TigerVNC..."
-          ssh -o StrictHostKeyChecking=no -R 0:localhost:5900 localhost.run > vnc_tunnel.log 2>&1 &
+          echo "Starting Serveo TCP tunnel for TigerVNC..."
+          ssh -o StrictHostKeyChecking=no -R 0:localhost:5900 serveo.net > vnc_tunnel.log 2>&1 &
           sleep 10
 
       - name: Get TigerVNC Connection Address
@@ -70,7 +69,7 @@ jobs:
           cd OSX-KVM
           sleep 5
           echo "=== TIGERVNC ADDRESS ==="
-          cat vnc_tunnel.log | grep -oE '[a-zA-Z0-9.-]+\.localhost\.run:[0-9]+' || cat vnc_tunnel.log
+          cat vnc_tunnel.log
 
       - name: Keep Alive (6 Hours Max)
         run: sleep 21600
