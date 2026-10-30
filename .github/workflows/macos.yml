@@ -20,17 +20,19 @@ jobs:
           chmod +x bore
           sudo mv bore /usr/local/bin/
 
-      - name: Clone OSX-KVM Repo & Setup Firmware
+      - name: Clone OSX-KVM Repo & Setup Valid Firmware
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
           cd OSX-KVM
-          # Fixed '1M' capital letter for dd block size
-          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1M count=2
           
-          # Also fetch OVMF_CODE.fd safely if not present
-          if [ ! -f "OVMF_CODE.fd" ]; then
-            curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd"
-          fi
+          # Remove any dummy or invalid files
+          rm -f OVMF_CODE.fd OVMF_VARS-1024x768.fd
+          
+          # Download correct 2MB OVMF_CODE firmware from official sources
+          wget -O OVMF_CODE.fd "https://github.com/kholia/OSX-KVM/raw/master/OVMF_CODE.fd" || curl -L -o OVMF_CODE.fd "https://github.com/kholia/OSX-KVM/raw/master/OVMF_CODE.fd"
+          
+          # Create exact 2MB blank NVRAM vars file using proper capital '1M'
+          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1M count=2
 
       - name: Download Valid BaseSystem via Automated Python Script
         run: |
@@ -38,6 +40,7 @@ jobs:
           echo "4" | python3 fetch-macOS-v2.py || python3 fetch-macOS-v2.py --action download --os Ventura || true
           
           if [ ! -f "BaseSystem.dmg" ] || [ $(stat -c%s "BaseSystem.dmg") -lt 50000000 ]; then
+            echo "Downloading from reliable mirror..."
             curl -L -o BaseSystem.dmg "https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg"
           fi
 
