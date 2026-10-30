@@ -83,10 +83,13 @@ jobs:
             -drive id=BaseSystem,if=ide,index=1,media=cdrom,file=BaseSystem.img \
             -drive id=SystemDisk,if=ide,index=2,file=mac_hdd_ng.img,format=qcow2 \
             -vga vmware \
-            -serial mon:stdio \
-            -vnc 0.0.0.0:0 &
+            -serial file:qemu_serial.log \
+            -vnc 0.0.0.0:0 > qemu_output.log 2>&1 &
 
           sleep 15
+          echo "=== QEMU SERIAL LOGS ==="
+          cat qemu_serial.log || true
+          
           echo "Starting Bore TCP Tunnel..."
           bore local 5900 --to bore.pub > vnc_tunnel.log 2>&1 &
           sleep 5
