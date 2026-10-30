@@ -53,6 +53,12 @@ jobs:
       - name: Launch QEMU macOS & Start Bore TCP Tunnel
         run: |
           cd OSX-KVM
+          
+          # Ensure OpenCore bootloader image exists or fetch it
+          if [ ! -f "OpenCore.qcow2" ]; then
+            curl -L -o OpenCore.qcow2 "https://github.com/kholia/OSX-KVM/raw/master/OpenCore/OpenCore.qcow2" || true
+          fi
+
           qemu-system-x86_64 \
             -enable-kvm \
             -m 3072 \
@@ -63,6 +69,7 @@ jobs:
             -device isa-applesmc,osk="ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc" \
             -drive if=pflash,format=raw,readonly=on,file=OVMF_CODE.fd \
             -drive if=pflash,format=raw,file=OVMF_VARS-1024x768.fd \
+            -drive id=OpenCore,if=ide,index=0,media=disk,file=OpenCore.qcow2,format=qcow2 \
             -smbios type=2 \
             -device ich9-intel-hda -device hda-duplex \
             -drive id=BaseSystem,if=ide,index=1,media=cdrom,file=BaseSystem.img \
