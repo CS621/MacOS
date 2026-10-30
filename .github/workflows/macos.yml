@@ -20,18 +20,16 @@ jobs:
           chmod +x bore
           sudo mv bore /usr/local/bin/
 
-      - name: Clone OSX-KVM Repo & Generate Valid Firmware
+      - name: Clone OSX-KVM Repo & Setup Valid Firmware
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
           cd OSX-KVM
           
-          # Remove any broken files
-          rm -f OVMF_CODE.fd OVMF_VARS-1024x768.fd
+          # Fetch authentic OVMF firmware binaries from repo releases/master
+          curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd" || wget -O OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd"
+          curl -L -o OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_VARS-1024x768.fd" || wget -O OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_VARS-1024x768.fd"
           
-          # Generate exact 2MB valid flash binaries using dd
-          dd if=/dev/zero of=OVMF_CODE.fd bs=1M count=2
-          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1M count=2
-          
+          # Ensure file integrity and display sizes
           ls -lh OVMF_CODE.fd OVMF_VARS-1024x768.fd
 
       - name: Download Valid BaseSystem via Automated Python Script
@@ -55,7 +53,7 @@ jobs:
           cd OSX-KVM
           
           if [ ! -f "OpenCore.qcow2" ]; then
-            curl -L -o OpenCore.qcow2 "https://github.com/kholia/OSX-KVM/raw/master/OpenCore/OpenCore.qcow2" || true
+            curl -L -o OpenCore.qcow2 "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OpenCore/OpenCore.qcow2" || true
           fi
 
           qemu-system-x86_64 \
@@ -73,7 +71,7 @@ jobs:
             -device ich9-intel-hda -device hda-duplex \
             -drive id=BaseSystem,if=ide,index=1,media=cdrom,file=BaseSystem.img \
             -drive id=SystemDisk,if=ide,index=2,file=mac_hdd_ng.img,format=qcow2 \
-            -device vga \
+            -vga std \
             -vnc 0.0.0.0:0 &
 
           sleep 15
