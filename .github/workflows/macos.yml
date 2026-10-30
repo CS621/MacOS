@@ -33,15 +33,15 @@ jobs:
           qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
           qemu-img create -f qcow2 mac_hdd_ng.img 64G
 
-      - name: Launch QEMU macOS & Start Direct TCP Tunnel
+     - name: Launch QEMU macOS & Start Direct TCP Tunnel
         run: |
           cd OSX-KVM
-          # Ensure OVMF firmware files exist in current folder
+          # Fetching OVMF firmware files safely from reliable paths in the repo
           if [ ! -f "OVMF_CODE.fd" ]; then
-            cp pc-bios/OVMF_CODE.fd . || wget https://github.com/kholia/OSX-KVM/raw/master/OVMF_CODE.fd
+            curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_CODE.fd" || wget -O OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_CODE.fd"
           fi
           if [ ! -f "OVMF_VARS-1024x768.fd" ]; then
-            cp pc-bios/OVMF_VARS-1024x768.fd . || wget https://github.com/kholia/OSX-KVM/raw/master/OVMF_VARS-1024x768.fd
+            curl -L -o OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_VARS-1024x768.fd" || wget -O OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_VARS-1024x768.fd"
           fi
 
           qemu-system-x86_64 \
