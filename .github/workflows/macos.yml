@@ -20,12 +20,20 @@ jobs:
           chmod +x bore
           sudo mv bore /usr/local/bin/
 
-      - name: Clone OSX-KVM Repo & Setup Valid Firmware
+      - name: Clone OSX-KVM Repo & Download Valid Firmware
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
           cd OSX-KVM
-          cp firmware/OVMF_CODE.fd .
-          cp firmware/OVMF_VARS-1024x768.fd .
+          
+          # Remove any leftover dummy files
+          rm -f OVMF_CODE.fd OVMF_VARS-1024x768.fd
+          
+          # Directly download correct raw firmware files with proper firmware/ path
+          curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_CODE.fd"
+          curl -L -o OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_VARS-1024x768.fd"
+          
+          # Verify file size (OVMF_CODE.fd must be ~2MB)
+          ls -lh OVMF_CODE.fd OVMF_VARS-1024x768.fd
 
       - name: Download Valid BaseSystem via Automated Python Script
         run: |
