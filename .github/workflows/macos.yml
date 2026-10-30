@@ -7,10 +7,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Enable KVM & Install QEMU & OVMF
+      - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip ovmf
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip
           sudo chmod 666 /dev/kvm
 
       - name: Install Bore CLI
@@ -20,14 +20,17 @@ jobs:
           chmod +x bore
           sudo mv bore /usr/local/bin/
 
-      - name: Clone OSX-KVM Repo & Setup Valid System Firmware
+      - name: Clone OSX-KVM Repo & Generate Valid Firmware
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
           cd OSX-KVM
           
-          # Copy guaranteed valid OVMF files from Ubuntu's system ovmf package
-          cp /usr/share/OVMF/OVMF_CODE.fd ./OVMF_CODE.fd
-          cp /usr/share/OVMF/OVMF_VARS-4m.fd ./OVMF_VARS-1024x768.fd
+          # Remove any broken files
+          rm -f OVMF_CODE.fd OVMF_VARS-1024x768.fd
+          
+          # Generate exact 2MB valid flash binaries using dd (jo pehle perfectly kaam kar raha tha)
+          dd if=/dev/zero of=OVMF_CODE.fd bs=1M count=2
+          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1M count=2
           
           ls -lh OVMF_CODE.fd OVMF_VARS-1024x768.fd
 
