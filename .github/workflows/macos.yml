@@ -25,14 +25,15 @@ jobs:
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
           cd OSX-KVM
           
-          # Remove any broken files
-          rm -f OVMF_CODE.fd OVMF_VARS-1024x768.fd
-          
-          # Copy valid system OVMF code from ubuntu apt package
-          cp /usr/share/OVMF/OVMF_CODE.fd ./OVMF_CODE.fd
-          
-          # Create exact 2MB blank NVRAM vars file using proper '1M'
-          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1M count=2
+          # Use firmware files directly from the repository's firmware folder
+          if [ -d "firmware" ]; then
+            cp firmware/OVMF_CODE.fd .
+            cp firmware/OVMF_VARS-1024x768.fd .
+          else
+            # Fallback direct download from master branch raw links
+            curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_CODE.fd"
+            curl -L -o OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/firmware/OVMF_VARS-1024x768.fd"
+          fi2
 
       - name: Download Valid BaseSystem via Automated Python Script
         run: |
