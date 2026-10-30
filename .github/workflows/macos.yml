@@ -83,6 +83,7 @@ jobs:
             -drive id=BaseSystem,if=ide,index=1,media=cdrom,file=BaseSystem.img \
             -drive id=SystemDisk,if=ide,index=2,file=mac_hdd_ng.img,format=qcow2 \
             -vga vmware \
+            -serial mon:stdio \
             -vnc 0.0.0.0:0 &
 
           sleep 15
