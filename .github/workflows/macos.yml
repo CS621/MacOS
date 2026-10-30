@@ -10,7 +10,7 @@ jobs:
       - name: Enable KVM & Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip
+          sudo apt-get install -y qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients bridge-utils curl wget python3-pip git-lfs
           sudo chmod 666 /dev/kvm
 
       - name: Install Bore CLI
@@ -50,13 +50,22 @@ jobs:
           qemu-img convert BaseSystem.dmg -O raw BaseSystem.img
           qemu-img create -f qcow2 mac_hdd_ng.img 64G
 
-      - name: Launch QEMU macOS & Start Bore TCP Tunnel
+      - name: Setup OpenCore via Git LFS & Launch QEMU
         run: |
           cd OSX-KVM
           
-          if [ ! -f "OpenCore.qcow2" ]; then
-            curl -L -o OpenCore.qcow2 "https://raw.githubusercontent.com/kholia/OSX-KVM/raw/master/OpenCore/OpenCore.qcow2" || true
+          # Pull actual OpenCore binary using Git LFS
+          git lfs install
+          git lfs pull
+          
+          if [ -f "OpenCore/OpenCore.qcow2" ]; then
+            cp OpenCore/OpenCore.qcow2 ./OpenCore.qcow2
+          else
+            echo "Downloading OpenCore mirror..."
+            curl -L -o OpenCore.qcow2 "https://github.com/kholia/OSX-KVM/releases/download/mercury/OpenCore.qcow2" || true
           fi
+          
+          ls -lh OpenCore.qcow2
 
           qemu-system-x86_64 \
             -enable-kvm \
