@@ -24,8 +24,13 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
           cd OSX-KVM
-          # Let the repo scripts/files set up valid firmware automatically
-          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1m count=2
+          # Fixed '1M' capital letter for dd block size
+          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1M count=2
+          
+          # Also fetch OVMF_CODE.fd safely if not present
+          if [ ! -f "OVMF_CODE.fd" ]; then
+            curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd"
+          fi
 
       - name: Download Valid BaseSystem via Automated Python Script
         run: |
