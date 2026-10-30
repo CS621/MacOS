@@ -20,11 +20,14 @@ jobs:
           chmod +x bore
           sudo mv bore /usr/local/bin/
 
-      - name: Clone OSX-KVM Repo
+      - name: Clone OSX-KVM Repo & Setup Firmware
         run: |
           git clone --depth 1 https://github.com/kholia/OSX-KVM.git
+          cd OSX-KVM
+          # Let the repo scripts/files set up valid firmware automatically
+          dd if=/dev/zero of=OVMF_VARS-1024x768.fd bs=1m count=2
 
-      - name: Download Valid BaseSystem & Firmware
+      - name: Download Valid BaseSystem via Automated Python Script
         run: |
           cd OSX-KVM
           echo "4" | python3 fetch-macOS-v2.py || python3 fetch-macOS-v2.py --action download --os Ventura || true
@@ -32,10 +35,6 @@ jobs:
           if [ ! -f "BaseSystem.dmg" ] || [ $(stat -c%s "BaseSystem.dmg") -lt 50000000 ]; then
             curl -L -o BaseSystem.dmg "https://github.com/kholia/OSX-KVM/releases/download/mercury/BaseSystem.dmg"
           fi
-
-          # Explicitly download OVMF firmware files to current folder
-          curl -L -o OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd" || wget -O OVMF_CODE.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_CODE.fd"
-          curl -L -o OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_VARS-1024x768.fd" || wget -O OVMF_VARS-1024x768.fd "https://raw.githubusercontent.com/kholia/OSX-KVM/master/OVMF_VARS-1024x768.fd"
 
       - name: Convert DMG to IMG
         run: |
@@ -72,7 +71,6 @@ jobs:
           cd OSX-KVM
           sleep 5
           echo "=== TIGERVNC ADDRESS ==="
-          echo "bore.pub:24697"
           cat vnc_tunnel.log
 
       - name: Keep Alive (6 Hours Max)
